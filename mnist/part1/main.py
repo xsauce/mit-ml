@@ -17,7 +17,7 @@ from kernel import *
 # Load MNIST data:
 train_x, train_y, test_x, test_y = get_MNIST_data()
 # Plot the first 20 images of the training set.
-plot_images(train_x[0:20, :])
+# plot_images(train_x[0:20, :])
 
 #######################################################################
 # 2. Linear Regression with Closed Form Solution
@@ -34,15 +34,17 @@ def run_linear_regression_on_MNIST(lambda_factor=1):
         Final test error
     """
     train_x, train_y, test_x, test_y = get_MNIST_data()
-    train_x_bias = np.hstack([np.ones([train_x.shape[0], 1]), train_x])
+    train_x_bias = np.hstack([np.ones([train_x.shape[0], 1]), train_x])[:10000]
     test_x_bias = np.hstack([np.ones([test_x.shape[0], 1]), test_x])
-    theta = closed_form(train_x_bias, train_y, lambda_factor)
+    theta = closed_form(train_x_bias, train_y[:10000], lambda_factor)
     test_error = compute_test_error_linear(test_x_bias, test_y, theta)
     return test_error
 
 
 # Don't run this until the relevant functions in linear_regression.py have been fully implemented.
-print('Linear Regression test_error =', run_linear_regression_on_MNIST(lambda_factor=1))
+# print('Linear Regression test_error =', run_linear_regression_on_MNIST(lambda_factor=1))
+# print('Linear Regression test_error =', run_linear_regression_on_MNIST(lambda_factor=0.1))
+# print('Linear Regression test_error =', run_linear_regression_on_MNIST(lambda_factor=0.01))
 
 
 #######################################################################
@@ -51,7 +53,7 @@ print('Linear Regression test_error =', run_linear_regression_on_MNIST(lambda_fa
 
 # TODO: first fill out functions in svm.py, or the functions below will not work
 
-def run_svm_one_vs_rest_on_MNIST():
+def run_svm_one_vs_rest_on_MNIST(C=0.1, random_state=0):
     """
     Trains svm, classifies test data, computes test error on test set
 
@@ -61,12 +63,16 @@ def run_svm_one_vs_rest_on_MNIST():
     train_x, train_y, test_x, test_y = get_MNIST_data()
     train_y[train_y != 0] = 1
     test_y[test_y != 0] = 1
-    pred_test_y = one_vs_rest_svm(train_x, train_y, test_x)
+    pred_test_y = one_vs_rest_svm(train_x, train_y, test_x, C=C, random_state=random_state)
     test_error = compute_test_error_svm(test_y, pred_test_y)
     return test_error
 
 
-print('SVM one vs. rest test_error:', run_svm_one_vs_rest_on_MNIST())
+# print('SVM one vs. rest test_error for C=0.01:', run_svm_one_vs_rest_on_MNIST(C=0.01))
+# print('SVM one vs. rest test_error for C=0.1:', run_svm_one_vs_rest_on_MNIST(C=0.1))
+# print('SVM one vs. rest test_error for C=1:', run_svm_one_vs_rest_on_MNIST(C=1))
+# print('SVM one vs. rest test_error for C=10:', run_svm_one_vs_rest_on_MNIST(C=10))
+
 
 
 def run_multiclass_svm_on_MNIST():
@@ -82,7 +88,7 @@ def run_multiclass_svm_on_MNIST():
     return test_error
 
 
-print('Multiclass SVM test_error:', run_multiclass_svm_on_MNIST())
+# print('Multiclass SVM test_error:', run_multiclass_svm_on_MNIST())
 
 #######################################################################
 # 4. Multinomial (Softmax) Regression and Gradient Descent
@@ -115,14 +121,19 @@ def run_softmax_on_MNIST(temp_parameter=1):
 
     # TODO: add your code here for the "Using the Current Model" question in tab 4.
     #      and print the test_error_mod3
+    train_y_mod3, test_y_mod3 = update_y(train_y, test_y)
+    test_error_mod3 = compute_test_error_mod3(test_x, test_y_mod3, theta, temp_parameter)
+    print("test_error_mod3=", test_error_mod3)
     return test_error
 
 
-print('softmax test_error=', run_softmax_on_MNIST(temp_parameter=1))
+# print('softmax test_error=', run_softmax_on_MNIST(temp_parameter=1))
 
 # TODO: Find the error rate for temp_parameter = [.5, 1.0, 2.0]
 #      Remember to return the tempParameter to 1, and re-run run_softmax_on_MNIST
 
+# for tp in [0.5,1.0,2.0]:
+#     print('softmax test_error=', run_softmax_on_MNIST(temp_parameter=tp), "for temp_parameter=", tp)
 #######################################################################
 # 6. Changing Labels
 #######################################################################
@@ -135,12 +146,15 @@ def run_softmax_on_MNIST_mod3(temp_parameter=1):
 
     See run_softmax_on_MNIST for more info.
     """
-    # YOUR CODE HERE
-    raise NotImplementedError
-
-
+    train_x, train_y, test_x, test_y = get_MNIST_data()
+    train_y_mod3, test_y_mod3 = update_y(train_y, test_y)
+    theta, cost_function_history = softmax_regression(train_x, train_y_mod3, temp_parameter, alpha=0.3, lambda_factor=1.0e-4, k=3, num_iterations=150)
+    # plot_cost_function_over_time(cost_function_history)
+    test_error = compute_test_error(test_x, test_y_mod3, theta, temp_parameter)
+    return test_error
 # TODO: Run run_softmax_on_MNIST_mod3(), report the error rate
 
+# print(run_softmax_on_MNIST_mod3(temp_parameter=1))
 
 #######################################################################
 # 7. Classification Using Manually Crafted Features
@@ -152,22 +166,24 @@ def run_softmax_on_MNIST_mod3(temp_parameter=1):
 
 
 n_components = 18
-
 ###Correction note:  the following 4 lines have been modified since release.
 train_x_centered, feature_means = center_data(train_x)
 pcs = principal_components(train_x_centered)
 train_pca = project_onto_PC(train_x, pcs, n_components, feature_means)
 test_pca = project_onto_PC(test_x, pcs, n_components, feature_means)
 
+
 # train_pca (and test_pca) is a representation of our training (and test) data
 # after projecting each example onto the first 18 principal components.
 
-
-# TODO: Train your softmax regression model using (train_pca, train_y)
+# Train your softmax regression model using (train_pca, train_y)
 #       and evaluate its accuracy on (test_pca, test_y).
+temp_parameter = 1
+theta, cost_function_history = softmax_regression(train_pca, train_y, temp_parameter, alpha=0.3, lambda_factor=1.0e-4, k=10, num_iterations=150)
+test_error = compute_test_error(test_pca, test_y, theta, temp_parameter)
+print("soft max test error after pca=", test_error)
 
-
-# TODO: Use the plot_PC function in features.py to produce scatterplot
+# Use the plot_PC function in features.py to produce scatterplot
 #       of the first 100 MNIST images, as represented in the space spanned by the
 #       first 2 principal components found above.
 plot_PC(train_x[range(000, 100), ], pcs, train_y[range(000, 100)], feature_means)#feature_means added since release

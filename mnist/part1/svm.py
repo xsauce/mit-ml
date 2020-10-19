@@ -4,7 +4,7 @@ from sklearn.svm import LinearSVC
 
 ### Functions for you to fill in ###
 
-def one_vs_rest_svm(train_x, train_y, test_x):
+def one_vs_rest_svm(train_x, train_y, test_x, C=0.1, random_state=0):
     """
     Trains a linear SVM for binary classifciation
 
@@ -15,8 +15,7 @@ def one_vs_rest_svm(train_x, train_y, test_x):
     Returns:
         pred_test_y - (m,) NumPy array containing the labels (0 or 1) for each test data point
     """
-    raise NotImplementedError
-
+    return LinearSVC(C=C, random_state=random_state).fit(train_x, train_y).predict(test_x)
 
 def multi_class_svm(train_x, train_y, test_x):
     """
@@ -29,7 +28,18 @@ def multi_class_svm(train_x, train_y, test_x):
     Returns:
         pred_test_y - (m,) NumPy array containing the labels (int) for each test data point
     """
-    raise NotImplementedError
+    # svc_list = []
+    # for i in range(0, 10):
+    #     tmp_train_y = np.copy(train_y)
+    #     tmp_train_y[tmp_train_y != i] = -1
+    #     svc_list.append(LinearSVC(C=0.1, random_state=0).fit(train_x, tmp_train_y))
+    # test_y = np.array([-1] * test_x.shape[0])
+    # merge_func = np.vectorize(lambda a, b: a if a != -1 else b)
+    # for svc in svc_list:
+    #     tmp_test_y = svc.predict(test_x)
+    #     test_y = merge_func(test_y, tmp_test_y)
+    # return test_y
+    return one_vs_rest_svm(train_x, train_y, test_x)
 
 
 def compute_test_error_svm(test_y, pred_test_y):
