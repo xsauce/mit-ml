@@ -19,8 +19,7 @@ def polynomial_kernel(X, Y, c, p):
         Returns:
             kernel_matrix - (n, m) Numpy array containing the kernel matrix
     """
-    # YOUR CODE HERE
-    raise NotImplementedError
+    return np.power(np.dot(X, Y.transpose()) + c, p)
 
 
 
@@ -38,5 +37,9 @@ def rbf_kernel(X, Y, gamma):
         Returns:
             kernel_matrix - (n, m) Numpy array containing the kernel matrix
     """
-    # YOUR CODE HERE
-    raise NotImplementedError
+    n = X.shape[0]
+    m = Y.shape[0]
+    D = np.dot(X, Y.transpose())
+    X2 = np.tile(np.sum(np.power(X, 2), axis=1).reshape(n, 1), [1, m])
+    Y2 = np.tile(np.sum(np.power(Y, 2), axis=1).reshape(m, 1), [1, n]).transpose()
+    return np.exp(-1 * gamma * (X2 + Y2 - 2 * D))
